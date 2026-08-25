@@ -1,4 +1,4 @@
-import { AuthForm } from "@/components/auth-form";
+import { redirect } from "next/navigation";
 
 type Props = {
   searchParams: Promise<{ next?: string; intent?: string }>;
@@ -6,16 +6,9 @@ type Props = {
 
 export default async function SignupPage({ searchParams }: Props) {
   const params = await searchParams;
-  const intent = params.intent;
-  const nextPath =
-    params.next ?? (intent === "business" ? "/business/subscribe" : "/");
-
-  return (
-    <section className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 pb-20">
-      <h1 className="font-display mb-10 text-5xl">
-        {intent === "business" ? "List your offer." : "Create an account."}
-      </h1>
-      <AuthForm mode="signup" nextPath={nextPath} intent={intent} />
-    </section>
-  );
+  const query = new URLSearchParams();
+  if (params.intent) query.set("intent", params.intent);
+  if (params.next) query.set("next", params.next);
+  const suffix = query.toString();
+  redirect(suffix ? `/login?${suffix}` : "/login");
 }

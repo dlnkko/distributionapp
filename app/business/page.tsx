@@ -1,29 +1,36 @@
 import Link from "next/link";
+import { CLICK_COST_USD, MIN_CREDIT_PURCHASE_USD } from "@/lib/credits";
+import { createClient } from "@/lib/supabase/server";
 
-export default function BusinessLandingPage() {
+export default async function BusinessLandingPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const continueHref = user
+    ? "/business/subscribe"
+    : "/login?intent=business&next=/business";
+
   return (
     <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-6 pb-24">
       <p className="text-xs uppercase tracking-[0.24em] text-ember">For businesses</p>
       <h1 className="font-display mt-6 max-w-3xl text-5xl leading-[1.05] sm:text-6xl">
-        Pay for exposure. Show up when someone is already looking for you.
+        Show up when someone is already looking for you.
       </h1>
       <p className="mt-6 max-w-2xl text-lg text-paper-dim">
-        $49 a month puts your software, service, product, or practice in the
-        matching catalog. We scrape your site, you add the details only you know,
-        and the intake interview does the rest.
+        You only pay when someone whose exact needs match your business clicks
+        through.
       </p>
-      <div className="mt-10 flex flex-wrap gap-4">
+      <p className="mt-3 text-sm text-paper-dim">
+        From ${MIN_CREDIT_PURCHASE_USD}. ${CLICK_COST_USD.toFixed(2)} per click
+      </p>
+      <div className="mt-10">
         <Link
-          href="/signup?intent=business&next=/business/subscribe"
-          className="rounded-full bg-ember px-6 py-3 text-sm font-medium text-ink"
+          href={continueHref}
+          className="inline-flex rounded-full bg-ember px-6 py-3 text-sm font-medium text-ink transition-[transform,background-color,box-shadow] duration-200 ease-out hover:scale-[1.045] hover:bg-ember-soft hover:shadow-[0_12px_32px_rgba(255,77,28,0.32)] active:scale-[0.96] active:bg-ember active:shadow-[0_4px_12px_rgba(255,77,28,0.2)]"
         >
-          Get listed
-        </Link>
-        <Link
-          href="/login?intent=business&next=/business/subscribe"
-          className="rounded-full border border-line px-6 py-3 text-sm"
-        >
-          I already have an account
+          {user ? "Continue" : "Continue with Google"}
         </Link>
       </div>
     </section>

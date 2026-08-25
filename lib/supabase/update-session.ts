@@ -37,6 +37,8 @@ export async function updateSession(request: NextRequest) {
     "/business/subscribe",
     "/business/onboard",
     "/business/dashboard",
+    "/find",
+    "/match",
   ];
 
   const needsAuth = protectedPrefixes.some((prefix) => path.startsWith(prefix));
@@ -44,8 +46,13 @@ export async function updateSession(request: NextRequest) {
   if (needsAuth && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("next", path);
-    url.searchParams.set("intent", "business");
+    url.search = "";
+    const next = `${path}${request.nextUrl.search}`;
+    url.searchParams.set("next", next);
+    url.searchParams.set(
+      "intent",
+      path.startsWith("/business") ? "business" : "search",
+    );
     return NextResponse.redirect(url);
   }
 

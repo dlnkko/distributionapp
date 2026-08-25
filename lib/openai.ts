@@ -23,6 +23,7 @@ export async function completeJson<T>(params: {
       { role: "user", content: params.user },
     ],
     text: { format: { type: "json_object" } },
+    store: false,
   });
 
   const text = response.output_text;

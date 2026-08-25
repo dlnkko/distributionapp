@@ -15,9 +15,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "distribution — find the thing that solves it",
+  title: "distribute.to — one perfect match",
   description:
-    "Type your pain point. We interview you, then match you to a software, service, product, freelancer, or business.",
+    "Type your pain point. We interview you, then match you to one listing. Businesses only pay when the right person clicks through.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

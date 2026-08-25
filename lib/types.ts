@@ -1,3 +1,5 @@
+import type { PricingPlan } from "@/lib/cta";
+
 export type QuestionOption = {
   id: string;
   label: string;
@@ -40,4 +42,9 @@ export type MatchResult = {
   tags: string[];
   reason: string;
   score: number;
+  ctaType: "book_call" | "pricing" | "visit_site";
+  ctaUrl: string;
+  ctaLabel: string;
+  pricingPlans: PricingPlan[];
+  logoUrl: string | null;
 };

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { completeJson } from "@/lib/openai";
 import { nextQuestionSystem, nextQuestionUser, TOTAL_QUESTIONS } from "@/lib/prompts";
+import { createClient } from "@/lib/supabase/server";
 import type { OnboardingAnswer, OnboardingQuestion, QuestionOption } from "@/lib/types";
 
 type NextBody = {
@@ -16,6 +17,14 @@ type ModelQuestion = {
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+    }
+
     const body = (await request.json()) as NextBody;
     const painPoint = body.painPoint?.trim() ?? "";
     const answers = Array.isArray(body.answers) ? body.answers : [];

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { completeJson } from "@/lib/openai";
 import { matchSystem, matchUser } from "@/lib/prompts";
 import { createClient } from "@/lib/supabase/server";
+import { destinationUrl, faviconUrl, parseCtaType, parsePlans } from "@/lib/cta";
 import type { MatchResult, OnboardingAnswer } from "@/lib/types";
 
 type MatchBody = {
@@ -29,11 +30,14 @@ export async function POST(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  }
 
   const { data: businesses, error } = await supabase
     .from("businesses")
     .select(
-      "id, name, tagline, description, extra_details, offer_summary, category, tags, target_audience, website_url",
+      "id, name, tagline, description, extra_details, offer_summary, category, tags, target_audience, website_url, logo_url, cta_type, cta_url, cta_label, pricing_plans",
     )
     .eq("subscription_status", "active");
 
@@ -59,6 +63,7 @@ export async function POST(request: Request) {
         category: item.category,
         tags: item.tags,
         target_audience: item.target_audience,
+        cta_type: item.cta_type,
       })),
     }),
   });
@@ -69,7 +74,7 @@ export async function POST(request: Request) {
   const sessionId = crypto.randomUUID();
   const { error: sessionError } = await supabase.from("search_sessions").insert({
     id: sessionId,
-    user_id: user?.id ?? null,
+    user_id: user.id,
     pain_point: painPoint,
     answers,
     question_count: answers.length,
@@ -96,6 +101,11 @@ export async function POST(request: Request) {
     tags: selected.tags,
     reason: match.reason ?? "This listing is the closest fit in the catalog.",
     score: match.score ?? 70,
+    ctaType: parseCtaType(selected.cta_type),
+    ctaUrl: destinationUrl(selected.cta_url, selected.website_url),
+    ctaLabel: selected.cta_label ?? "Book a call",
+    pricingPlans: parsePlans(selected.pricing_plans),
+    logoUrl: selected.logo_url || faviconUrl(selected.website_url ?? "") || null,
   };
 
   return NextResponse.json(result);

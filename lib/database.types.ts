@@ -33,6 +33,10 @@ export type Database = {
           target_audience: string | null;
           updated_at: string;
           website_url: string | null;
+          cta_type: string;
+          cta_url: string | null;
+          cta_label: string | null;
+          pricing_plans: Json;
         };
         Insert: {
           category?: string | null;
@@ -54,6 +58,10 @@ export type Database = {
           target_audience?: string | null;
           updated_at?: string;
           website_url?: string | null;
+          cta_type?: string;
+          cta_url?: string | null;
+          cta_label?: string | null;
+          pricing_plans?: Json;
         };
         Update: {
           category?: string | null;
@@ -75,12 +83,55 @@ export type Database = {
           target_audience?: string | null;
           updated_at?: string;
           website_url?: string | null;
+          cta_type?: string;
+          cta_url?: string | null;
+          cta_label?: string | null;
+          pricing_plans?: Json;
         };
         Relationships: [];
+      };
+      listing_clicks: {
+        Row: {
+          business_id: string;
+          charged_usd: number;
+          created_at: string;
+          destination_url: string;
+          id: string;
+          visitor_email: string | null;
+          visitor_id: string | null;
+        };
+        Insert: {
+          business_id: string;
+          charged_usd?: number;
+          created_at?: string;
+          destination_url: string;
+          id?: string;
+          visitor_email?: string | null;
+          visitor_id?: string | null;
+        };
+        Update: {
+          business_id?: string;
+          charged_usd?: number;
+          created_at?: string;
+          destination_url?: string;
+          id?: string;
+          visitor_email?: string | null;
+          visitor_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "listing_clicks_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       profiles: {
         Row: {
           created_at: string;
+          credit_balance: number;
           full_name: string | null;
           id: string;
           role: string;
@@ -88,6 +139,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          credit_balance?: number;
           full_name?: string | null;
           id: string;
           role?: string;
@@ -95,6 +147,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          credit_balance?: number;
           full_name?: string | null;
           id?: string;
           role?: string;
@@ -157,7 +210,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      record_listing_click: {
+        Args: { p_business_id: string; p_destination?: string | null };
+        Returns: Json;
+      };
     };
     Enums: {
       [_ in never]: never;
