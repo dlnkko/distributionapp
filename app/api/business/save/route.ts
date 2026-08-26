@@ -6,6 +6,7 @@ import {
   parseCtaType,
   parsePlans,
 } from "@/lib/cta";
+import { syncListingEmbedding } from "@/lib/matching/embed-listing";
 
 type SaveBody = {
   name?: string;
@@ -120,13 +121,21 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("businesses")
     .insert(payload)
-    .select("id")
+    .select(
+      "id, name, tagline, description, extra_details, offer_summary, category, tags, target_audience",
+    )
     .single();
   if (error || !data) {
     return NextResponse.json(
       { error: error?.message ?? "Could not save the listing." },
       { status: 500 },
     );
+  }
+
+  try {
+    await syncListingEmbedding(supabase, data);
+  } catch (embedError) {
+    console.error("Listing embedding failed", embedError);
   }
 
   return NextResponse.json({ id: data.id });

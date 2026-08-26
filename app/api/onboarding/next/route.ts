@@ -44,6 +44,8 @@ export async function POST(request: Request) {
     const generated = await completeJson<ModelQuestion>({
       system: nextQuestionSystem,
       user: nextQuestionUser({ painPoint, answers, nextNumber }),
+      reasoningEffort: "low",
+      cacheKey: "dt-onboard-q",
     });
 
     const options = (generated.options ?? []).slice(0, 4);

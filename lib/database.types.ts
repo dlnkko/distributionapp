@@ -90,6 +90,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      listing_embeddings: {
+        Row: {
+          business_id: string;
+          embedding: string;
+          document_text: string;
+          search_tsv: string;
+          category: string | null;
+          model: string;
+          updated_at: string;
+        };
+        Insert: {
+          business_id: string;
+          embedding: string;
+          document_text: string;
+          category?: string | null;
+          model?: string;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          embedding?: string;
+          document_text?: string;
+          category?: string | null;
+          model?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "listing_embeddings_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: true;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       listing_clicks: {
         Row: {
           business_id: string;
@@ -213,6 +249,23 @@ export type Database = {
       record_listing_click: {
         Args: { p_business_id: string; p_destination?: string | null };
         Returns: Json;
+      };
+      hybrid_search_listings: {
+        Args: {
+          query_embedding: string;
+          query_text: string;
+          filter_category?: string | null;
+          match_count?: number;
+        };
+        Returns: {
+          business_id: string;
+          similarity: number;
+          fts_rank: number;
+          hybrid_score: number;
+          credit_balance: number;
+          click_count: number;
+          impression_count: number;
+        }[];
       };
     };
     Enums: {
