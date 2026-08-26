@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { QuestionFlow } from "@/components/question-flow";
+import { findPathForPain } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -14,10 +15,14 @@ export default async function FindPage({ searchParams }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const next = painPoint
-    ? `/find?q=${encodeURIComponent(painPoint)}`
-    : "/";
-  if (!user) redirect(`/login?intent=search&next=${encodeURIComponent(next)}`);
+  const next = painPoint ? findPathForPain(painPoint) : "/";
+  if (!user) {
+    redirect(
+      painPoint
+        ? `/login?intent=search&next=/find&q=${encodeURIComponent(painPoint)}`
+        : `/login?intent=search&next=${encodeURIComponent(next)}`,
+    );
+  }
 
   if (painPoint.length < 8) {
     return (

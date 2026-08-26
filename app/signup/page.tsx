@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 type Props = {
-  searchParams: Promise<{ next?: string; intent?: string }>;
+  searchParams: Promise<{ next?: string; intent?: string; q?: string }>;
 };
 
 export default async function SignupPage({ searchParams }: Props) {
@@ -9,6 +9,7 @@ export default async function SignupPage({ searchParams }: Props) {
   const query = new URLSearchParams();
   if (params.intent) query.set("intent", params.intent);
   if (params.next) query.set("next", params.next);
+  if (params.q) query.set("q", params.q);
   const suffix = query.toString();
   redirect(suffix ? `/login?${suffix}` : "/login");
 }

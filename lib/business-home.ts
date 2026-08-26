@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { AuthIntent } from "@/lib/auth";
 import type { Database } from "@/lib/database.types";
 
 /**
@@ -26,11 +27,8 @@ export async function businessPostAuthPath(
   return "/business/subscribe";
 }
 
-export function isBusinessEntryPath(path: string) {
-  return (
-    path === "/" ||
-    path === "/business" ||
-    path === "/business/subscribe" ||
-    path.startsWith("/login")
-  );
+export function isBusinessAuth(intent: AuthIntent | string | null, nextPath: string) {
+  if (intent === "search") return false;
+  if (intent === "business") return true;
+  return nextPath === "/business" || nextPath.startsWith("/business/");
 }

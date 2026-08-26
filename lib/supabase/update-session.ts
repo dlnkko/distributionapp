@@ -53,6 +53,10 @@ export async function updateSession(request: NextRequest) {
       "intent",
       path.startsWith("/business") ? "business" : "search",
     );
+    const pain = request.nextUrl.searchParams.get("q")?.trim();
+    if (path.startsWith("/find") && pain) {
+      url.searchParams.set("q", pain);
+    }
     return NextResponse.redirect(url);
   }
 

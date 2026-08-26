@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { RescueOAuthCode } from "@/components/rescue-oauth-code";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="relative min-h-full flex flex-col">
         <div className="grain" />
+        <RescueOAuthCode />
         <SiteHeader />
         <main className="relative z-10 flex flex-1 flex-col">{children}</main>
       </body>

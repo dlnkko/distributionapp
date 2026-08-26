@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PENDING_PAIN_KEY, findPathForPain } from "@/lib/auth";
 
 type Props = {
   signedIn?: boolean;
@@ -18,6 +19,14 @@ export function PainSearch({ signedIn = false }: Props) {
   const router = useRouter();
   const [value, setValue] = useState("");
   const [typed, setTyped] = useState("");
+
+  useEffect(() => {
+    const pending = sessionStorage.getItem(PENDING_PAIN_KEY)?.trim() ?? "";
+    if (pending.length < 8) return;
+    if (!signedIn) return;
+    sessionStorage.removeItem(PENDING_PAIN_KEY);
+    router.replace(findPathForPain(pending));
+  }, [signedIn, router]);
 
   useEffect(() => {
     if (value) return;
@@ -76,11 +85,15 @@ export function PainSearch({ signedIn = false }: Props) {
     event.preventDefault();
     const pain = value.trim();
     if (pain.length < 8) return;
-    const dest = `/find?q=${encodeURIComponent(pain)}`;
+    sessionStorage.setItem(PENDING_PAIN_KEY, pain);
+    const dest = findPathForPain(pain);
     if (!signedIn) {
-      router.push(`/login?intent=search&next=${encodeURIComponent(dest)}`);
+      router.push(
+        `/login?intent=search&next=/find&q=${encodeURIComponent(pain)}`,
+      );
       return;
     }
+    sessionStorage.removeItem(PENDING_PAIN_KEY);
     router.push(dest);
   }
 
