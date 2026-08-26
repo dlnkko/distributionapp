@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AUTH_NEXT_COOKIE } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -14,6 +15,7 @@ export function GoogleSignIn({ nextPath }: Props) {
   async function signIn() {
     setError("");
     setLoading(true);
+    document.cookie = `${AUTH_NEXT_COOKIE}=${encodeURIComponent(nextPath)}; Path=/; Max-Age=600; SameSite=Lax`;
     const supabase = createClient();
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 

@@ -19,19 +19,18 @@ export default async function BusinessOnboardPage() {
     redirect("/business/subscribe");
   }
 
-  const { data: listing } = await supabase
+  const { data: listings } = await supabase
     .from("businesses")
     .select("id")
-    .eq("owner_id", user.id)
-    .maybeSingle();
+    .eq("owner_id", user.id);
 
-  if (listing) {
-    redirect("/business/dashboard");
-  }
+  const addingAnother = (listings?.length ?? 0) > 0;
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 pb-24 pt-8">
-      <h1 className="font-display text-5xl">Tell us what you sell.</h1>
+      <h1 className="font-display text-5xl">
+        {addingAnother ? "Add another listing." : "Tell us what you sell."}
+      </h1>
       <p className="mt-4 mb-12 max-w-xl text-paper-dim">
         Paste the URL. We scrape it, draft the listing, and you pick the call to
         action people see when we recommend you. After you publish, it stays as is.

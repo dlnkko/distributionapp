@@ -9,7 +9,7 @@ export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
   const intent = params.intent;
   const nextPath = safeNextPath(
-    params.next ?? (intent === "business" ? "/business" : "/"),
+    params.next ?? (intent === "business" ? "/business/subscribe" : "/"),
   );
 
   const title =

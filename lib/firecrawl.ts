@@ -21,6 +21,35 @@ type SearchHit = {
   description?: string;
 };
 
+/**
+ * Drops image markdown, CDN asset URLs, and leftover markup so listing
+ * copy stays readable text — never `![](https://...webp)`.
+ */
+export function scrubScrapedText(value: string) {
+  return value
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/!\[[^\]]*\]/g, " ")
+    .replace(/<img\b[^>]*>/gi, " ")
+    .replace(/<a\b[^>]*>(.*?)<\/a>/gi, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/https?:\/\/\S+\.(?:png|jpe?g|webp|gif|svg|avif|ico)(?:[?#]\S*)?/gi, " ")
+    .replace(/https?:\/\/\S*cdn-cgi\/image\S*/gi, " ")
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/[*_`>#]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanListingCopy(listing: ScrapedListing): ScrapedListing {
+  return {
+    ...listing,
+    tagline: scrubScrapedText(listing.tagline),
+    description: scrubScrapedText(listing.description),
+    offerSummary: scrubScrapedText(listing.offerSummary),
+  };
+}
+
 export function getFirecrawl() {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   return new Firecrawl(apiKey ? { apiKey } : {});
@@ -42,10 +71,11 @@ export async function scrapeWebsite(url: string) {
   const favicon = metadata?.favicon?.trim() || metadata?.ogImage?.trim() || "";
 
   if (!isChallengePage(metadata?.title, markdown) && (markdown.trim() || metadata?.title)) {
+    const listing = listingFromPage(metadata, markdown, url);
     return {
-      markdown: markdown.slice(0, 14000),
+      markdown: scrubScrapedText(markdown).slice(0, 14000),
       favicon,
-      listing: listingFromPage(metadata, markdown, url),
+      listing: cleanListingCopy(listing),
     };
   }
 
@@ -100,19 +130,21 @@ async function listingFromSearch(firecrawl: Firecrawl, pageUrl: string) {
 
   const listing: ScrapedListing = {
     name: name || prettyBrand(host),
-    tagline: remainder || firstSentence(home.description ?? "") || name,
-    description: description || remainder,
+    tagline: scrubScrapedText(remainder || firstSentence(home.description ?? "") || name),
+    description: scrubScrapedText(description || remainder),
     category: guessCategory(`${home.title ?? ""} ${description}`, []),
     tags: keywordsToTags(`${home.title ?? ""}, ${home.description ?? ""}`),
     targetAudience: "",
-    offerSummary: firstSentence(home.description || remainder || description),
+    offerSummary: firstSentence(scrubScrapedText(home.description || remainder || description)),
   };
 
   return {
-    listing,
-    markdown: [`# ${listing.name}`, listing.tagline, "", listing.description]
-      .filter(Boolean)
-      .join("\n"),
+    listing: cleanListingCopy(listing),
+    markdown: scrubScrapedText(
+      [`# ${listing.name}`, listing.tagline, "", listing.description]
+        .filter(Boolean)
+        .join("\n"),
+    ),
   };
 }
 
@@ -123,7 +155,7 @@ function listingFromPage(metadata: PageMeta | undefined, markdown: string, pageU
   );
   const { name: titleName, remainder } = splitBrandTitle(metaTitle);
   const heading = firstHeading(markdown);
-  const blurb = (metadata?.ogDescription || metadata?.description || "").trim();
+  const blurb = scrubScrapedText(metadata?.ogDescription || metadata?.description || "");
   const body = firstParagraphs(markdown);
   const name = pickName(titleName, heading, brand);
   const description = [blurb, body].filter(Boolean).join(" ") || remainder;
@@ -132,12 +164,12 @@ function listingFromPage(metadata: PageMeta | undefined, markdown: string, pageU
 
   return {
     name,
-    tagline,
-    description,
+    tagline: scrubScrapedText(tagline),
+    description: scrubScrapedText(description),
     category: guessCategory(`${markdown}\n${tags.join(" ")}`, tags),
     tags,
     targetAudience: "",
-    offerSummary: firstSentence(description) || tagline,
+    offerSummary: scrubScrapedText(firstSentence(description) || tagline),
   };
 }
 
@@ -162,7 +194,7 @@ function splitBrandTitle(title: string) {
 
 function firstHeading(markdown: string) {
   const match = markdown.match(/^#{1,2}\s+(.+)$/m);
-  return match?.[1]?.replace(/[*_`]/g, "").trim() ?? "";
+  return scrubScrapedText(match?.[1]?.replace(/[*_`]/g, "") ?? "");
 }
 
 function cleanTitle(value: string) {
@@ -177,17 +209,10 @@ function firstSentence(value: string) {
 function firstParagraphs(markdown: string) {
   return markdown
     .split("\n")
-    .map((line) =>
-      line
-        .replace(/^#+\s*/, "")
-        .replace(/[*_`>#]/g, "")
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-        .trim(),
-    )
+    .map((line) => scrubScrapedText(line.replace(/^#+\s*/, "")))
     .filter(
       (line) =>
         line.length > 40 &&
-        !/^https?:\/\//i.test(line) &&
         !line.startsWith("|") &&
         !CHALLENGE.test(line),
     )

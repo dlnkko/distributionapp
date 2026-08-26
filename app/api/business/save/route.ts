@@ -87,7 +87,7 @@ export async function POST(request: Request) {
   const payload = {
     owner_id: user.id,
     name,
-    slug: `${slugify(name) || "listing"}-${user.id.slice(0, 6)}`,
+    slug: `${slugify(name) || "listing"}-${user.id.slice(0, 6)}-${crypto.randomUUID().slice(0, 8)}`,
     website_url: websiteUrl || null,
     tagline: body.tagline ?? null,
     description: body.description ?? null,
@@ -104,19 +104,6 @@ export async function POST(request: Request) {
     pricing_plans: parsePlans(body.pricingPlans).filter((plan) => plan.name),
     logo_url: body.logoUrl?.trim() || faviconUrl(websiteUrl) || null,
   };
-
-  const { data: existing } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("owner_id", user.id)
-    .maybeSingle();
-
-  if (existing) {
-    return NextResponse.json(
-      { error: "This listing is locked. You cannot edit it after publishing." },
-      { status: 409 },
-    );
-  }
 
   const { data, error } = await supabase
     .from("businesses")

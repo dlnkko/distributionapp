@@ -15,15 +15,18 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?intent=business&next=/business/dashboard");
 
-  const { data: listing } = await supabase
+  const { data: listings } = await supabase
     .from("businesses")
     .select("id, name")
     .eq("owner_id", user.id)
-    .maybeSingle();
+    .order("created_at", { ascending: false });
 
-  if (!listing) {
+  if (!listings?.length) {
     redirect("/business/onboard");
   }
+
+  const listingIds = listings.map((item) => item.id);
+  const listingName = new Map(listings.map((item) => [item.id, item.name]));
 
   const [{ data: profile }, clicksResult] = await Promise.all([
     supabase
@@ -33,8 +36,10 @@ export default async function DashboardPage() {
       .maybeSingle(),
     supabase
       .from("listing_clicks")
-      .select("id, created_at, charged_usd, visitor_email", { count: "exact" })
-      .eq("business_id", listing.id)
+      .select("id, business_id, created_at, charged_usd, visitor_email", {
+        count: "exact",
+      })
+      .in("business_id", listingIds)
       .order("created_at", { ascending: false })
       .limit(50),
   ]);
@@ -44,11 +49,14 @@ export default async function DashboardPage() {
   const clickCount = clicksResult.count ?? clickRows.length;
   const remaining = clicksRemaining(balance);
   const low = balance < CLICK_COST_USD;
+  const several = listings.length > 1;
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 pb-24 pt-8">
       <p className="text-xs uppercase tracking-[0.22em] text-ember">Dashboard</p>
-      <h1 className="font-display mt-4 text-5xl">{listing.name}</h1>
+      <h1 className="font-display mt-4 text-5xl">
+        {several ? "Your listings" : listings[0].name}
+      </h1>
       <p className="mt-3 text-paper-dim">Clicks, credits, and the emails behind them.</p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-3">
@@ -64,18 +72,40 @@ export default async function DashboardPage() {
         </p>
       ) : (
         <p className="mt-6 text-sm text-paper-dim">
-          Each click to your website costs {formatUsd(CLICK_COST_USD)}.
+          Each click to your website costs {formatUsd(CLICK_COST_USD)}. Credits
+          are shared across your listings.
         </p>
       )}
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-wrap gap-3">
         <Link
           href="/business/subscribe"
           className="inline-flex rounded-full bg-ember px-5 py-2 text-sm font-medium text-ink"
         >
           Add credits
         </Link>
+        <Link
+          href="/business/onboard"
+          className="inline-flex rounded-full border border-line px-5 py-2 text-sm font-medium text-paper transition-colors hover:border-ember/70"
+        >
+          Add new listing
+        </Link>
       </div>
+
+      {several ? (
+        <div className="mt-14">
+          <p className="text-xs uppercase tracking-[0.18em] text-paper-dim">
+            Listings
+          </p>
+          <ul className="mt-5 divide-y divide-line border-t border-line">
+            {listings.map((item) => (
+              <li key={item.id} className="py-4 text-paper">
+                {item.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="mt-14">
         <p className="text-xs uppercase tracking-[0.18em] text-paper-dim">
@@ -93,7 +123,14 @@ export default async function DashboardPage() {
                 key={click.id}
                 className="flex flex-col gap-1 py-4 sm:flex-row sm:items-baseline sm:justify-between"
               >
-                <p className="text-paper">{click.visitor_email || "Unknown"}</p>
+                <div>
+                  <p className="text-paper">{click.visitor_email || "Unknown"}</p>
+                  {several ? (
+                    <p className="mt-1 text-sm text-paper-dim">
+                      {listingName.get(click.business_id) ?? "Listing"}
+                    </p>
+                  ) : null}
+                </div>
                 <p className="text-sm text-paper-dim">
                   {formatClickTime(click.created_at)}
                   {Number(click.charged_usd) > 0
