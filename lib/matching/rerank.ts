@@ -12,7 +12,7 @@ type RerankModel = {
 };
 
 /**
- * Grok only sees the 20–30 retrieved listings. It returns 3–5 with a short
+ * Luna reranks the 20 retrieved listings. It returns 3–5 with a short
  * reason each. IDs outside the candidate set are dropped.
  */
 export async function rerankCandidates(input: {
@@ -34,18 +34,18 @@ export async function rerankCandidates(input: {
         id: item.businessId,
         name: item.name,
         tagline: item.tagline,
-        description: item.description,
         extra_details: item.extraDetails,
         offer_summary: item.offerSummary,
         category: item.category,
         tags: item.tags,
         target_audience: item.targetAudience,
         cta_type: item.ctaType,
-        similarity: item.similarity,
+        similarity: Number(item.similarity.toFixed(3)),
       })),
     }),
-    reasoningEffort: "high",
+    reasoningEffort: "medium",
     cacheKey: "dt-match-rerank",
+    maxTokens: 4000,
   });
 
   const allowed = new Set(input.candidates.map((item) => item.businessId));

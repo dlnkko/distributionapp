@@ -1,43 +1,77 @@
-import { completeJson } from "@/lib/openai";
-import { distillSystem, distillUser } from "@/lib/prompts";
 import type { DistilledPainQuery, QueryUrgency } from "@/lib/matching/types";
 import type { OnboardingAnswer } from "@/lib/types";
 
-type DistillModel = {
-  painText?: string;
-  category?: string | null;
-  location?: string | null;
-  urgency?: QueryUrgency;
-  keywords?: string[];
-};
-
-const URGENCY: QueryUrgency[] = ["low", "medium", "high"];
+const STOP = new Set([
+  "the",
+  "and",
+  "for",
+  "with",
+  "from",
+  "that",
+  "this",
+  "your",
+  "you",
+  "are",
+  "can",
+  "all",
+  "one",
+  "into",
+  "need",
+  "want",
+  "just",
+  "like",
+  "have",
+  "been",
+]);
 
 /**
- * Asks Grok to compress the 8-question intake into a retrieval query:
- * one pain paragraph plus category / location / urgency filters.
+ * Turns intake into a Voyage query without a Grok call. The raw pain plus
+ * chosen labels are a better retrieval string than a paraphrased paragraph,
+ * and this removes a full flagship request from every match.
  */
-export async function distillPainQuery(input: {
+export function distillPainQuery(input: {
   painPoint: string;
   answers: OnboardingAnswer[];
-}): Promise<DistilledPainQuery> {
-  const generated = await completeJson<DistillModel>({
-    system: distillSystem,
-    user: distillUser(input),
-    reasoningEffort: "low",
-    cacheKey: "dt-match-distill",
-  });
-
-  const painText = generated.painText?.trim() || input.painPoint.trim();
-  const urgency = URGENCY.includes(generated.urgency as QueryUrgency)
-    ? (generated.urgency as QueryUrgency)
-    : "medium";
+}): DistilledPainQuery {
+  const labels = input.answers.map((answer) => answer.label).filter(Boolean);
+  const haystack = `${input.painPoint}\n${labels.join(" ")}`.toLowerCase();
+  const painText = [
+    input.painPoint.trim(),
+    ...input.answers.map((answer) => `${answer.question}: ${answer.label}`),
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return {
     painText,
-    category: generated.category?.trim() || null,
-    location: generated.location?.trim() || null,
-    urgency,
-    keywords: (generated.keywords ?? []).map((item) => item.trim()).filter(Boolean).slice(0, 12),
+    category: guessCategory(haystack),
+    location: null,
+    urgency: guessUrgency(haystack),
+    keywords: keywordsFrom(labels, input.painPoint),
   };
+}
+
+function guessCategory(text: string): DistilledPainQuery["category"] {
+  if (/\bfreelanc|hire someone|done[- ]for[- ]you|agency\b/.test(text)) {
+    return "freelancer";
+  }
+  if (/\bconsult|done for me|book a call|service\b/.test(text)) return "service";
+  if (/\b(saas|software|app|platform|self[- ]serve)\b/.test(text)) return "software";
+  return null;
+}
+
+function guessUrgency(text: string): QueryUrgency {
+  if (/\b(today|this week|asap|urgent|right now)\b/.test(text)) return "high";
+  if (/\b(explor|later|someday|no rush)\b/.test(text)) return "low";
+  return "medium";
+}
+
+function keywordsFrom(labels: string[], painPoint: string) {
+  return `${painPoint} ${labels.join(" ")}`
+    .toLowerCase()
+    .split(/[^a-z0-9/+]+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length > 3 && word.length < 24 && !STOP.has(word))
+    .filter((word, index, all) => all.indexOf(word) === index)
+    .slice(0, 10);
 }

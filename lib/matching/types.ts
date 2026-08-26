@@ -9,7 +9,7 @@ export const VOYAGE_EMBEDDING_DIMENSIONS = 1024;
 export const VOYAGE_EMBEDDING_MODEL = "voyage-4-large";
 
 /** Candidates retrieved from pgvector + FTS before Grok ever sees a listing. */
-export const RETRIEVAL_CANDIDATE_COUNT = 30;
+export const RETRIEVAL_CANDIDATE_COUNT = 20;
 
 /** How many listings Grok may keep after reasoning. */
 export const RERANK_KEEP_COUNT = 5;

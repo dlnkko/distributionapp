@@ -37,6 +37,7 @@ export type Database = {
           cta_url: string | null;
           cta_label: string | null;
           pricing_plans: Json;
+          credit_balance: number;
         };
         Insert: {
           category?: string | null;
@@ -62,6 +63,7 @@ export type Database = {
           cta_url?: string | null;
           cta_label?: string | null;
           pricing_plans?: Json;
+          credit_balance?: number;
         };
         Update: {
           category?: string | null;
@@ -87,6 +89,7 @@ export type Database = {
           cta_url?: string | null;
           cta_label?: string | null;
           pricing_plans?: Json;
+          credit_balance?: number;
         };
         Relationships: [];
       };
@@ -168,6 +171,7 @@ export type Database = {
         Row: {
           created_at: string;
           credit_balance: number;
+          prepaid_listing_credits: number;
           full_name: string | null;
           id: string;
           role: string;
@@ -176,6 +180,7 @@ export type Database = {
         Insert: {
           created_at?: string;
           credit_balance?: number;
+          prepaid_listing_credits?: number;
           full_name?: string | null;
           id: string;
           role?: string;
@@ -184,6 +189,7 @@ export type Database = {
         Update: {
           created_at?: string;
           credit_balance?: number;
+          prepaid_listing_credits?: number;
           full_name?: string | null;
           id?: string;
           role?: string;

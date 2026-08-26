@@ -1,55 +1,92 @@
 import OpenAI from "openai";
 
-const MODEL = process.env.OPENAI_MODEL ?? process.env.XAI_MODEL ?? "grok-4.6";
-const XAI_BASE_URL = "https://api.x.ai/v1";
+export const MATCH_MODEL = process.env.OPENAI_MODEL ?? "gpt-5.6-luna";
+export const INTAKE_MODEL = process.env.OPENAI_INTAKE_MODEL ?? MATCH_MODEL;
 
-type ReasoningEffort = "low" | "medium" | "high";
+const RETRY_WAITS_MS = [400, 800, 1600, 3200];
+
+type ReasoningEffort = "none" | "low" | "medium" | "high";
 
 export function getOpenAI() {
-  const apiKey = process.env.XAI_API_KEY ?? process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("Missing XAI_API_KEY");
+    throw new Error("Missing OPENAI_API_KEY");
   }
   return new OpenAI({
     apiKey,
-    baseURL: XAI_BASE_URL,
-    timeout: 90_000,
+    timeout: 45_000,
   });
 }
 
 export async function completeJson<T>(params: {
   system: string;
   user: string;
+  model?: string;
   reasoningEffort?: ReasoningEffort;
   cacheKey?: string;
+  maxTokens?: number;
 }): Promise<T> {
   const client = getOpenAI();
+  const model = params.model ?? MATCH_MODEL;
+  let lastBusy = false;
 
-  const response = await client.chat.completions.create(
-    {
-      model: MODEL,
-      messages: [
-        { role: "system", content: params.system },
-        { role: "user", content: params.user },
-      ],
-      response_format: { type: "json_object" },
-      reasoning_effort: params.reasoningEffort ?? "low",
-    },
-    params.cacheKey
-      ? { headers: { "x-grok-conv-id": params.cacheKey } }
-      : undefined,
-  );
+  for (let attempt = 0; attempt <= RETRY_WAITS_MS.length; attempt += 1) {
+    if (attempt > 0) await sleep(RETRY_WAITS_MS[attempt - 1]);
 
-  const text = response.choices[0]?.message?.content;
-  if (!text) {
-    throw new Error("The model returned an empty response");
+    try {
+      const response = await client.chat.completions.create({
+        model,
+        messages: [
+          { role: "system", content: params.system },
+          { role: "user", content: params.user },
+        ],
+        response_format: { type: "json_object" },
+        reasoning_effort: params.reasoningEffort ?? "none",
+        ...(params.maxTokens
+          ? { max_completion_tokens: params.maxTokens }
+          : {}),
+      });
+
+      const text = response.choices[0]?.message?.content?.trim();
+      if (!text) {
+        lastBusy = true;
+        continue;
+      }
+      return parseJson<T>(text);
+    } catch (error) {
+      if (isRetryable(error)) {
+        lastBusy = true;
+        continue;
+      }
+      throw error;
+    }
   }
 
-  return parseJson<T>(text);
+  throw new Error(
+    lastBusy
+      ? "Still working on that. Try again in a moment."
+      : "The model returned an empty response",
+  );
+}
+
+function isRetryable(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const status = "status" in error ? Number(error.status) : 0;
+  if (status === 429 || status === 500 || status === 503) return true;
+  const message = "message" in error ? String(error.message).toLowerCase() : "";
+  return (
+    message.includes("rate limit") ||
+    message.includes("overloaded") ||
+    message.includes("try again")
+  );
 }
 
 function parseJson<T>(text: string): T {
   const trimmed = text.trim();
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
   return JSON.parse(fenced?.[1] ?? trimmed) as T;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

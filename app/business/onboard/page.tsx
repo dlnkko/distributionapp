@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { BusinessOnboardForm } from "@/components/business-onboard-form";
+import { MIN_CREDIT_PURCHASE_USD } from "@/lib/credits";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function BusinessOnboardPage() {
@@ -9,20 +10,19 @@ export default async function BusinessOnboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?intent=business&next=/business/onboard");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("subscription_status")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, { data: listings }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("prepaid_listing_credits")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase.from("businesses").select("id").eq("owner_id", user.id),
+  ]);
 
-  if (profile?.subscription_status !== "active") {
-    redirect("/business/subscribe");
+  const prepaid = Number(profile?.prepaid_listing_credits ?? 0);
+  if (prepaid < MIN_CREDIT_PURCHASE_USD) {
+    redirect("/business/subscribe?purpose=new");
   }
-
-  const { data: listings } = await supabase
-    .from("businesses")
-    .select("id")
-    .eq("owner_id", user.id);
 
   const addingAnother = (listings?.length ?? 0) > 0;
 
@@ -33,7 +33,8 @@ export default async function BusinessOnboardPage() {
       </h1>
       <p className="mt-4 mb-12 max-w-xl text-paper-dim">
         Paste the URL. We scrape it, draft the listing, and you pick the call to
-        action people see when we recommend you. After you publish, it stays as is.
+        action people see when we recommend you. Credits you just bought stay on
+        this listing. After you publish, it stays as is.
       </p>
       <BusinessOnboardForm />
     </section>

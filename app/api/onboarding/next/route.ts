@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { completeJson } from "@/lib/openai";
+import { INTAKE_MODEL, completeJson } from "@/lib/openai";
 import { nextQuestionSystem, nextQuestionUser, TOTAL_QUESTIONS } from "@/lib/prompts";
 import { createClient } from "@/lib/supabase/server";
 import type { OnboardingAnswer, OnboardingQuestion, QuestionOption } from "@/lib/types";
+
+export const maxDuration = 120;
 
 type NextBody = {
   painPoint?: string;
@@ -44,8 +46,10 @@ export async function POST(request: Request) {
     const generated = await completeJson<ModelQuestion>({
       system: nextQuestionSystem,
       user: nextQuestionUser({ painPoint, answers, nextNumber }),
-      reasoningEffort: "low",
+      model: INTAKE_MODEL,
+      reasoningEffort: "none",
       cacheKey: "dt-onboard-q",
+      maxTokens: 1024,
     });
 
     const options = (generated.options ?? []).slice(0, 4);

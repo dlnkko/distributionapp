@@ -38,17 +38,17 @@ export function nextQuestionUser(input: {
   answers: OnboardingAnswer[];
   nextNumber: number;
 }) {
-  return JSON.stringify(
-    {
-      painPoint: input.painPoint,
-      answersSoFar: input.answers,
-      nextQuestionNumber: input.nextNumber,
-      totalQuestions: TOTAL_QUESTIONS,
-      thisQuestionShouldCover: questionFocus(input.nextNumber),
-    },
-    null,
-    2,
-  );
+  return JSON.stringify({
+    painPoint: input.painPoint,
+    answersSoFar: input.answers.map((answer) => ({
+      n: answer.questionId,
+      q: answer.question,
+      a: answer.label,
+    })),
+    nextQuestionNumber: input.nextNumber,
+    totalQuestions: TOTAL_QUESTIONS,
+    thisQuestionShouldCover: questionFocus(input.nextNumber),
+  });
 }
 
 function questionFocus(n: number) {
@@ -118,33 +118,6 @@ export function matchUser(input: {
   );
 }
 
-export const distillSystem = `Turn an 8-question intake into a retrieval query for a business catalog.
-
-Write one dense paragraph of the real job to be done, in the person's words. Then extract filters. Do not invent a city or category they did not imply. Urgency is high if they need it this week, low if exploratory.
-
-JSON:
-{
-  "painText": "4-8 sentences, specific",
-  "category": "software|service|freelancer|product|null",
-  "location": "string or null",
-  "urgency": "low|medium|high",
-  "keywords": ["3 to 8 short keywords"]
-}`;
-
-export function distillUser(input: {
-  painPoint: string;
-  answers: OnboardingAnswer[];
-}) {
-  return JSON.stringify(
-    {
-      painPoint: input.painPoint,
-      answers: input.answers,
-    },
-    null,
-    2,
-  );
-}
-
 export const rerankSystem = `You rerank a SHORTLIST of catalog listings for one person. You never see the full catalog.
 
 Pick 3 to 5 listings that actually do the job they named. Rank best-first. Score each 0-100.
@@ -174,7 +147,6 @@ export function rerankUser(input: {
     id: string;
     name: string;
     tagline: string | null;
-    description: string | null;
     extra_details: string | null;
     offer_summary: string | null;
     category: string | null;
@@ -184,17 +156,14 @@ export function rerankUser(input: {
     similarity: number;
   }>;
 }) {
-  return JSON.stringify(
-    {
-      painPoint: input.painPoint,
-      distilledPain: input.distilledPain,
-      answers: input.answers,
-      keep: input.keep,
-      candidates: input.businesses,
-      instruction:
-        "Only rank listings in candidates. Return 3-5 items. extra_details is the owner's positioning — weigh it heavily.",
-    },
-    null,
-    2,
-  );
+  return JSON.stringify({
+    painPoint: input.painPoint,
+    distilledPain: input.distilledPain,
+    answers: input.answers.map((answer) => ({
+      q: answer.question,
+      a: answer.label,
+    })),
+    keep: input.keep,
+    candidates: input.businesses,
+  });
 }

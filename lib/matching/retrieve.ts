@@ -106,7 +106,7 @@ async function fallbackActiveListings(
   const { data } = await supabase
     .from("businesses")
     .select(
-      "id, name, tagline, description, extra_details, offer_summary, category, tags, target_audience, cta_type",
+      "id, name, tagline, description, extra_details, offer_summary, category, tags, target_audience, cta_type, credit_balance",
     )
     .eq("subscription_status", "active")
     .order("created_at", { ascending: false })
@@ -117,7 +117,7 @@ async function fallbackActiveListings(
     similarity: 0,
     ftsRank: 0,
     hybridScore: 0,
-    creditBalance: 0,
+    creditBalance: Number(listing.credit_balance) || 0,
     clickCount: 0,
     impressionCount: 0,
     name: listing.name,

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 type Body = {
   amount?: number;
+  listingId?: string;
 };
 
 export async function POST(request: Request) {
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json()) as Body;
   const amount = Number(body.amount);
+  const listingId = body.listingId?.trim() || "";
 
   if (
     !Number.isFinite(amount) ||
@@ -38,44 +40,90 @@ export async function POST(request: Request) {
     return NextResponse.json({ checkoutUrl });
   }
 
-  const { data: profile, error: readError } = await supabase
-    .from("profiles")
-    .select("credit_balance")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (readError) {
-    return NextResponse.json({ error: readError.message }, { status: 500 });
-  }
-
   const fullName =
     (typeof user.user_metadata?.full_name === "string"
       ? user.user_metadata.full_name
       : null) ??
     (typeof user.user_metadata?.name === "string" ? user.user_metadata.name : null);
 
-  const nextBalance = Number(profile?.credit_balance ?? 0) + rounded;
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, prepaid_listing_credits")
+    .eq("id", user.id)
+    .maybeSingle();
 
-  const query = profile
-    ? supabase
-        .from("profiles")
-        .update({
-          role: "business",
-          subscription_status: "active",
-          credit_balance: nextBalance,
-        })
-        .eq("id", user.id)
-    : supabase.from("profiles").insert({
-        id: user.id,
-        role: "business",
-        subscription_status: "active",
-        credit_balance: nextBalance,
-        full_name: fullName,
-      });
+  if (profileError) {
+    return NextResponse.json({ error: profileError.message }, { status: 500 });
+  }
 
-  const { error } = await query;
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const profilePayload = {
+    role: "business" as const,
+    subscription_status: "active" as const,
+  };
+
+  if (listingId) {
+    const { data: listing, error: listingError } = await supabase
+      .from("businesses")
+      .select("id, credit_balance")
+      .eq("id", listingId)
+      .eq("owner_id", user.id)
+      .maybeSingle();
+
+    if (listingError || !listing) {
+      return NextResponse.json({ error: "That listing was not found." }, { status: 404 });
+    }
+
+    const { error: creditError } = await supabase
+      .from("businesses")
+      .update({ credit_balance: Number(listing.credit_balance ?? 0) + rounded })
+      .eq("id", listing.id)
+      .eq("owner_id", user.id);
+
+    if (creditError) {
+      return NextResponse.json({ error: creditError.message }, { status: 500 });
+    }
+  } else {
+    const nextPrepaid = Number(profile?.prepaid_listing_credits ?? 0) + rounded;
+    const query = profile
+      ? supabase
+          .from("profiles")
+          .update({
+            ...profilePayload,
+            prepaid_listing_credits: nextPrepaid,
+          })
+          .eq("id", user.id)
+      : supabase.from("profiles").insert({
+          id: user.id,
+          ...profilePayload,
+          prepaid_listing_credits: nextPrepaid,
+          full_name: fullName,
+        });
+
+    const { error } = await query;
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, demo: true, added: rounded });
+  }
+
+  if (profile) {
+    const { error } = await supabase
+      .from("profiles")
+      .update(profilePayload)
+      .eq("id", user.id);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  } else {
+    const { error } = await supabase.from("profiles").insert({
+      id: user.id,
+      ...profilePayload,
+      full_name: fullName,
+    });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ok: true, demo: true, added: rounded });

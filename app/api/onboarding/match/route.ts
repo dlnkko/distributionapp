@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { destinationUrl, faviconUrl, parseCtaType, parsePlans } from "@/lib/cta";
 import type { MatchResult, OnboardingAnswer } from "@/lib/types";
 
+export const maxDuration = 120;
+
 type MatchBody = {
   painPoint?: string;
   answers?: OnboardingAnswer[];

@@ -11,6 +11,7 @@ const PRESETS = [20, 50, 100, 250];
 
 type Props = {
   nextPath?: string;
+  listingId?: string;
 };
 
 function sanitizeAmount(value: string) {
@@ -22,7 +23,10 @@ function sanitizeAmount(value: string) {
   return digits;
 }
 
-export function CreditsPurchase({ nextPath = "/business/dashboard" }: Props) {
+export function CreditsPurchase({
+  nextPath = "/business/dashboard",
+  listingId,
+}: Props) {
   const router = useRouter();
   const [raw, setRaw] = useState(String(MIN_CREDIT_PURCHASE_USD));
   const [loading, setLoading] = useState(false);
@@ -46,7 +50,7 @@ export function CreditsPurchase({ nextPath = "/business/dashboard" }: Props) {
       const response = await fetch("/api/business/credits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ amount, listingId: listingId || undefined }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Could not add credits.");
@@ -109,7 +113,9 @@ export function CreditsPurchase({ nextPath = "/business/dashboard" }: Props) {
       >
         {loading
           ? "Adding..."
-          : `Add $${valid ? amount : MIN_CREDIT_PURCHASE_USD} in credits`}
+          : listingId
+            ? `Add $${valid ? amount : MIN_CREDIT_PURCHASE_USD} to this listing`
+            : `Pay $${valid ? amount : MIN_CREDIT_PURCHASE_USD} for this listing`}
       </button>
     </form>
   );

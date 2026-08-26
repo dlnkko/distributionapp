@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AuthIntent } from "@/lib/auth";
+import { MIN_CREDIT_PURCHASE_USD } from "@/lib/credits";
 import type { Database } from "@/lib/database.types";
 
 /**
@@ -19,11 +19,13 @@ export async function businessPostAuthPath(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("subscription_status")
+    .select("prepaid_listing_credits")
     .eq("id", userId)
     .maybeSingle();
 
-  if (profile?.subscription_status === "active") return "/business/onboard";
+  if (Number(profile?.prepaid_listing_credits ?? 0) >= MIN_CREDIT_PURCHASE_USD) {
+    return "/business/onboard";
+  }
   return "/business/subscribe";
 }
 

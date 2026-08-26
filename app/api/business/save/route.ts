@@ -7,6 +7,7 @@ import {
   parsePlans,
 } from "@/lib/cta";
 import { syncListingEmbedding } from "@/lib/matching/embed-listing";
+import { MIN_CREDIT_PURCHASE_USD } from "@/lib/credits";
 
 type SaveBody = {
   name?: string;
@@ -46,13 +47,14 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("subscription_status")
+    .select("subscription_status, prepaid_listing_credits")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (profile?.subscription_status !== "active") {
+  const prepaid = Number(profile?.prepaid_listing_credits ?? 0);
+  if (prepaid < MIN_CREDIT_PURCHASE_USD) {
     return NextResponse.json(
-      { error: "Buy credits first. They start at $20." },
+      { error: "Buy credits for this listing first. They start at $20." },
       { status: 402 },
     );
   }
@@ -98,6 +100,7 @@ export async function POST(request: Request) {
     target_audience: targetAudience,
     offer_summary: body.offerSummary ?? null,
     subscription_status: "active" as const,
+    credit_balance: prepaid,
     cta_type: ctaType,
     cta_url: ctaUrl,
     cta_label: body.ctaLabel?.trim() || defaultCtaLabel(ctaType),
@@ -117,6 +120,15 @@ export async function POST(request: Request) {
       { error: error?.message ?? "Could not save the listing." },
       { status: 500 },
     );
+  }
+
+  const { error: prepaidError } = await supabase
+    .from("profiles")
+    .update({ prepaid_listing_credits: 0 })
+    .eq("id", user.id);
+
+  if (prepaidError) {
+    console.error("Could not clear prepaid listing credits", prepaidError);
   }
 
   try {

@@ -16,9 +16,9 @@ export type MatchPipelineResult = {
 /**
  * End-to-end matcher used by `/api/onboarding/match`.
  *
- * 1. Distill the intake into a retrieval query (Grok, low effort).
- * 2. Voyage query embedding + pgvector cosine + FTS hybrid → top 20–30.
- * 3. Grok reranks those candidates to 3–5 with reasons.
+ * 1. Distill the intake into a retrieval query (no LLM).
+ * 2. Voyage query embedding + pgvector cosine + FTS hybrid → top 20.
+ * 3. GPT-5.6 Luna reranks those candidates to 3–5 with reasons.
  * 4. CPC auction reorders that shortlist; the UI still shows #1.
  */
 export async function runMatchPipeline(

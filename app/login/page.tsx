@@ -42,11 +42,8 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <section className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 pb-20">
-      <h1 className={`font-display text-5xl ${copy || pain.length >= 8 ? "mb-4" : "mb-10"}`}>{title}</h1>
+      <h1 className={`font-display text-5xl ${copy ? "mb-4" : "mb-10"}`}>{title}</h1>
       {copy ? <p className="mb-10 text-paper-dim">{copy}</p> : null}
-      {intentParam === "search" && pain.length >= 8 ? (
-        <p className="mb-8 text-paper-dim">You said: “{pain}”</p>
-      ) : null}
       {params.error ? (
         <p className="mb-6 text-sm text-ember">Could not finish sign-in. Try again.</p>
       ) : null}
