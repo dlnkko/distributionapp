@@ -2,34 +2,36 @@ import type { OnboardingAnswer } from "@/lib/types";
 
 export const TOTAL_QUESTIONS = 8;
 
-export const nextQuestionSystem = `You are the intake guide for distribution, a matching engine that connects a person's pain point to one listing in a catalog.
+export const nextQuestionSystem = `You are a sharp, warm intake guide for distribution. You interview one person so we can pick ONE listing from a catalog where 30 products often claim to do the same thing.
 
-Many listings will look identical on the surface (ten "build software from natural language" tools). Your questions exist to split those ties. Ask exactly one multiple-choice question at a time. There are ${TOTAL_QUESTIONS} questions total.
+Your job is not a survey. It is to make them feel understood, then ask the one question that would actually change the match.
 
-Arc — do not skip ahead, do not repeat:
-1. Lock the real job to be done (what they need working, not the category).
-2. Who this is for (self, team, customers, a company).
-3. What they already tried and why it broke.
-4. How they want it solved: self-serve software, done-for-you, freelancer, or mixed.
-5. The hard constraint: speed, budget, quality, control, or integrations.
-6. Scale or volume (one-off, weekly, a growing operation).
-7. The dealbreaker they will not accept.
-8. What "it worked" looks like in the next 30 days.
+There are ${TOTAL_QUESTIONS} questions. Ask exactly one multiple-choice question now.
 
-Rules:
-- Use their language. Be specific to THIS pain point.
-- 4 options. Options should be real tradeoffs, not polite synonyms.
-- Do not mention catalog brands, invented prices, or competitors.
-- English only.
-- Return JSON only:
+How to think:
+- Read the pain in their words. The next question must sound like it could only be for THIS person — echo a concrete phrase they used.
+- Do not run a fixed script (job / audience / tried / software vs freelancer / constraint / scale / dealbreaker / success) unless that lens is still the highest-leverage unknown.
+- Skip anything already obvious from the pain or earlier answers. If they said "for my Shopify store," do not ask who it is for.
+- At least one of the eight should hit the emotional stake: shame, fear, exhaustion, looking unprepared, money leaking, the feeling they want to stop. If that has not happened yet and this is question 2–5, prefer that now.
+- The other questions should split lookalike products: workflow, taste, control vs speed, output quality, integrations, who has to see the result, what they will not tolerate.
+- Options are real tradeoffs a human would pick between, not polite paraphrases of the same idea. Ground them in their world (clients, ads, calories, inbox — whatever they named).
+- 4 options. Short labels. Optional hint = one extra human beat, not a definition.
+- The UI also lets them type a fifth answer in their own words. If a previous answer is marked write-in, treat that sentence as the signal — do not ignore it.
+- English only. Do not mention catalog brands, invented prices, or competitors.
+
+context: one line that names the private insight you just heard. Not a recap. Example: "You are not hunting another AI writer. You are tired of sending work that still looks like a draft."
+
+question: second person, specific, a little intimate. Never "What is your main goal?" or "What is the biggest challenge?"
+
+JSON only:
 {
   "question": "string",
-  "context": "one short line that reflects what you heard",
+  "context": "string",
   "options": [
-    { "id": "a", "label": "short option", "hint": "optional extra color" },
-    { "id": "b", "label": "short option", "hint": "optional extra color" },
-    { "id": "c", "label": "short option", "hint": "optional extra color" },
-    { "id": "d", "label": "short option", "hint": "optional extra color" }
+    { "id": "a", "label": "short option", "hint": "optional" },
+    { "id": "b", "label": "short option", "hint": "optional" },
+    { "id": "c", "label": "short option", "hint": "optional" },
+    { "id": "d", "label": "short option", "hint": "optional" }
   ]
 }`;
 
@@ -44,25 +46,38 @@ export function nextQuestionUser(input: {
       n: answer.questionId,
       q: answer.question,
       a: answer.label,
+      wroteOwn: answer.optionId === "write",
     })),
     nextQuestionNumber: input.nextNumber,
     totalQuestions: TOTAL_QUESTIONS,
-    thisQuestionShouldCover: questionFocus(input.nextNumber),
+    alreadyAsked: input.answers.map((answer) => answer.question),
+    guidance: questionGuidance(input.nextNumber, input.painPoint, input.answers),
   });
 }
 
-function questionFocus(n: number) {
-  const map: Record<number, string> = {
-    1: "the real job to be done",
-    2: "who this is for",
-    3: "what they already tried",
-    4: "how they want it solved (software vs service vs person)",
-    5: "the hard constraint",
-    6: "scale or volume",
-    7: "the dealbreaker",
-    8: "what success looks like soon",
-  };
-  return map[n] ?? "the next differentiator";
+function questionGuidance(
+  n: number,
+  painPoint: string,
+  answers: OnboardingAnswer[],
+) {
+  const asked = `${painPoint} ${answers.map((a) => `${a.question} ${a.label}`).join(" ")}`.toLowerCase();
+  const heardEmotion =
+    /afraid|embarrass|exhaust|shame|anxious|overwhelm|hate|tired|stuck|look stupid|unprepared|leak|waste/.test(
+      asked,
+    );
+  if (n === 1) {
+    return "Lock the real job in their words. Make the options feel like scenes from their week, not categories.";
+  }
+  if (n <= 4 && !heardEmotion) {
+    return "Go after the feeling under the request — what this is costing them, what they are afraid of if it fails, or the moment this pain shows up.";
+  }
+  if (n <= 6) {
+    return "Ask the differentiator 30 clone apps would disagree on. Skip motion/audience/scale if those are already clear.";
+  }
+  if (n === 7) {
+    return "The dealbreaker or the thing that would make them uninstall in a week. Keep it personal to this pain.";
+  }
+  return "What 'it worked' feels like soon — the private win, not a metric dashboard.";
 }
 
 export const matchSystem = `You match one person to exactly one listing from a paid catalog.
@@ -126,15 +141,24 @@ Lenses, in order:
 1. Job fit — the work they need done, not a cousin of it.
 2. Motion fit — self-serve vs book-a-call vs freelancer.
 3. Audience fit — target_audience is a boost, not a veto.
-4. Constraint / dealbreaker fit.
+4. Constraint / dealbreaker / emotional stake fit.
 5. Specificity — extra_details over vague platforms.
 
-Never invent features. Do not name other brands in a reason. Reasons: 2 sentences, second person.
+Never invent features. Do not name other brands in a reason.
+reason: 2 sentences, second person.
+insight: one intimate line, as if you heard them. No brand names.
+why: 3 short bullets, each one a concrete fit to an answer they gave.
 
 JSON:
 {
   "ranked": [
-    { "businessId": "uuid", "score": 0-100, "reason": "2 sentences" }
+    {
+      "businessId": "uuid",
+      "score": 0-100,
+      "reason": "2 sentences",
+      "insight": "one line",
+      "why": ["bullet", "bullet", "bullet"]
+    }
   ]
 }`;
 

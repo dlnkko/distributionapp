@@ -75,6 +75,8 @@ export async function POST(request: Request) {
       tags: selected.tags,
       reason: pipeline.winner.reason,
       score: Math.round(pipeline.winner.grokScore),
+      insight: pipeline.winner.insight,
+      why: pipeline.winner.why ?? [],
       ctaType: parseCtaType(selected.cta_type),
       ctaUrl: destinationUrl(selected.cta_url, selected.website_url),
       ctaLabel: selected.cta_label ?? "Book a call",

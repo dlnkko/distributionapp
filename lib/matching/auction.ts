@@ -41,6 +41,8 @@ export function scoreAuction(input: {
       {
         businessId: item.businessId,
         reason: item.reason,
+        insight: item.insight,
+        why: item.why,
         grokScore: item.grokScore,
         similarity: retrieved.similarity,
         hybridScore: retrieved.hybridScore,

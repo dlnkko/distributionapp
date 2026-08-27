@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PENDING_PAIN_KEY, findPathForPain } from "@/lib/auth";
+import { prefetchFirstQuestion } from "@/lib/prefetch-question";
 
 type Props = {
   signedIn?: boolean;
@@ -25,6 +26,7 @@ export function PainSearch({ signedIn = false }: Props) {
     if (pending.length < 8) return;
     if (!signedIn) return;
     sessionStorage.removeItem(PENDING_PAIN_KEY);
+    prefetchFirstQuestion(pending);
     router.replace(findPathForPain(pending));
   }, [signedIn, router]);
 
@@ -94,6 +96,7 @@ export function PainSearch({ signedIn = false }: Props) {
       return;
     }
     sessionStorage.removeItem(PENDING_PAIN_KEY);
+    prefetchFirstQuestion(pain);
     router.push(dest);
   }
 

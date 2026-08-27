@@ -41,6 +41,8 @@ export type MatchResult = {
   category: string | null;
   tags: string[];
   reason: string;
+  insight: string | null;
+  why: string[];
   score: number;
   ctaType: "book_call" | "pricing" | "visit_site";
   ctaUrl: string;

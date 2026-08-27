@@ -43,7 +43,7 @@ export function ListingCta({
           .map((plan) => (
             <article
               key={plan.name}
-              className="flex flex-col rounded-2xl border border-line bg-ink-soft/70 p-5"
+              className="flex flex-col rounded-2xl border border-line bg-ink/30 p-5 transition-transform duration-300 hover:-translate-y-0.5"
             >
               <p className="text-[11px] uppercase tracking-[0.18em] text-paper-dim">
                 {plan.name}

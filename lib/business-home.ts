@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MIN_CREDIT_PURCHASE_USD } from "@/lib/credits";
 import type { Database } from "@/lib/database.types";
+import type { AuthIntent } from "@/lib/auth";
 
 /**
  * Where a business-side Google login should land.

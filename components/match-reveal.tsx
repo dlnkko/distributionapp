@@ -25,64 +25,131 @@ export function MatchReveal() {
     );
   }
 
+  const why = match.why?.filter(Boolean) ?? [];
+  const host = hostFrom(match.websiteUrl);
+
   return (
-    <section className="reveal-up mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-20">
-      <div className="flex items-baseline justify-between gap-6">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-ember">Your match</p>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-paper-dim">
+    <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 pb-24 pt-10">
+      <p className="reveal-item text-[11px] uppercase tracking-[0.28em] text-ember">
+        This one
+      </p>
+
+      <article className="reveal-item mt-8 rounded-3xl border border-line bg-ink-soft/60 px-6 py-8 sm:px-10 sm:py-10">
+        <div className="flex items-start gap-5">
+          {match.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={match.logoUrl}
+              alt=""
+              width={72}
+              height={72}
+              className="size-[4.5rem] shrink-0 rounded-2xl bg-paper object-contain p-1.5"
+            />
+          ) : (
+            <div className="flex size-[4.5rem] shrink-0 items-center justify-center rounded-2xl bg-ink text-2xl text-ember">
+              {match.name.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <h1 className="font-display text-4xl leading-[0.95] tracking-tight sm:text-6xl">
+              {match.name}
+            </h1>
+            {match.tagline ? (
+              <p className="mt-3 text-lg leading-7 text-paper-dim sm:text-xl">
+                {match.tagline}
+              </p>
+            ) : null}
+            {host ? <p className="mt-2 text-sm text-paper-dim">{host}</p> : null}
+          </div>
+        </div>
+
+        {match.insight ? (
+          <blockquote className="font-display mt-10 max-w-2xl text-2xl leading-snug italic text-ember-soft">
+            {match.insight}
+          </blockquote>
+        ) : null}
+
+        {why.length > 0 ? (
+          <div className="mt-10">
+            <p className="text-xs uppercase tracking-[0.18em] text-paper-dim">
+              Why it fits you
+            </p>
+            <ol className="mt-5 space-y-4">
+              {why.map((line, index) => (
+                <li key={`${index}-${line.slice(0, 24)}`} className="flex gap-4">
+                  <span className="font-display w-6 shrink-0 text-ember">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <p className="text-[15px] leading-7 text-paper">{line}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : (
+          <p className="mt-8 max-w-xl text-[15px] leading-7 text-paper-dim">
+            {match.reason}
+          </p>
+        )}
+
+        {match.offerSummary ? (
+          <div className="mt-10 rounded-2xl border border-line bg-ink/40 px-5 py-5">
+            <p className="text-xs uppercase tracking-[0.18em] text-paper-dim">
+              What they do
+            </p>
+            <p className="mt-3 text-base leading-7 text-paper">
+              {match.offerSummary}
+            </p>
+          </div>
+        ) : null}
+
+        {match.tags?.length ? (
+          <div className="mt-8 flex flex-wrap gap-2">
+            {match.tags.slice(0, 8).map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-line px-3 py-1 text-xs text-paper-dim"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-10">
+          <ListingCta
+            type={match.ctaType}
+            ctaUrl={match.ctaUrl}
+            websiteUrl={match.websiteUrl}
+            label={match.ctaLabel}
+            plans={match.pricingPlans}
+            businessId={match.businessId}
+          />
+        </div>
+      </article>
+
+      <div
+        className="reveal-item mt-8 flex items-center justify-between gap-4 text-sm text-paper-dim"
+        style={{ animationDelay: "280ms" }}
+      >
+        <Link href="/" className="transition-colors hover:text-paper">
+          Search another pain
+        </Link>
+        <p className="uppercase tracking-[0.18em] text-[11px]">
           {Math.round(match.score)} / 100
         </p>
       </div>
-
-      <div className="mt-10 flex items-center gap-5">
-        {match.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={match.logoUrl}
-            alt=""
-            width={72}
-            height={72}
-            className="size-[4.5rem] shrink-0 rounded-2xl bg-paper object-contain p-1.5"
-          />
-        ) : null}
-        <div className="min-w-0">
-          <h1 className="font-display text-5xl leading-[0.95] tracking-tight sm:text-6xl">
-            {match.name}
-          </h1>
-          {match.tagline ? (
-            <p className="mt-3 text-lg leading-7 text-paper-dim sm:text-xl">
-              {match.tagline}
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      {match.offerSummary ? (
-        <p className="mt-10 max-w-xl text-xl leading-8 text-paper">
-          {match.offerSummary}
-        </p>
-      ) : null}
-
-      <p className="mt-6 max-w-xl text-[15px] leading-7 text-paper-dim">
-        {match.reason}
-      </p>
-
-      <div className="mt-12 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-        <ListingCta
-          type={match.ctaType}
-          ctaUrl={match.ctaUrl}
-          websiteUrl={match.websiteUrl}
-          label={match.ctaLabel}
-          plans={match.pricingPlans}
-          businessId={match.businessId}
-        />
-        <Link
-          href="/"
-          className="text-sm text-paper-dim transition-colors hover:text-paper"
-        >
-          Search another pain
-        </Link>
-      </div>
     </section>
   );
+}
+
+function hostFrom(url: string | null) {
+  if (!url?.trim()) return null;
+  try {
+    return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).hostname.replace(
+      /^www\./,
+      "",
+    );
+  } catch {
+    return null;
+  }
 }

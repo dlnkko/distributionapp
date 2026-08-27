@@ -8,6 +8,8 @@ type RerankModel = {
     businessId?: string;
     score?: number;
     reason?: string;
+    insight?: string;
+    why?: string[];
   }>;
 };
 
@@ -43,18 +45,28 @@ export async function rerankCandidates(input: {
         similarity: Number(item.similarity.toFixed(3)),
       })),
     }),
-    reasoningEffort: "medium",
+    reasoningEffort: "low",
     cacheKey: "dt-match-rerank",
-    maxTokens: 4000,
+    maxTokens: 2200,
+    verbosity: "low",
+    timeoutMs: 25_000,
   });
 
   const allowed = new Set(input.candidates.map((item) => item.businessId));
   const ranked = (generated.ranked ?? [])
-    .map((item) => ({
-      businessId: item.businessId ?? "",
-      grokScore: clampScore(item.score),
-      reason: item.reason?.trim() || "This listing is a close fit for the job they described.",
-    }))
+    .map((item) => {
+      const reason =
+        item.reason?.trim() ||
+        "This listing is a close fit for the job they described.";
+      const why = (item.why ?? []).map((entry) => entry.trim()).filter(Boolean);
+      return {
+        businessId: item.businessId ?? "",
+        grokScore: clampScore(item.score),
+        reason,
+        insight: item.insight?.trim() || null,
+        why: why.length ? why.slice(0, 3) : sentencesAsWhy(reason),
+      };
+    })
     .filter((item) => allowed.has(item.businessId))
     .slice(0, RERANK_KEEP_COUNT);
 
@@ -64,7 +76,17 @@ export async function rerankCandidates(input: {
     businessId: item.businessId,
     grokScore: Math.max(40, 80 - index * 8),
     reason: "Closest retrieved listing for this pain point.",
+    insight: null,
+    why: [],
   }));
+}
+
+function sentencesAsWhy(reason: string) {
+  return reason
+    .split(/[.!?]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 3);
 }
 
 function clampScore(value: number | undefined) {

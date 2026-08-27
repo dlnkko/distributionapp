@@ -90,6 +90,8 @@ export type GrokRerankItem = {
   /** Fit score 0–100 from Grok, before the CPC auction. */
   grokScore: number;
   reason: string;
+  insight: string | null;
+  why: string[];
 };
 
 export type AuctionWeights = {
@@ -110,6 +112,8 @@ export const DEFAULT_AUCTION_WEIGHTS: AuctionWeights = {
 export type AuctionScoredListing = {
   businessId: string;
   reason: string;
+  insight: string | null;
+  why: string[];
   grokScore: number;
   similarity: number;
   hybridScore: number;
