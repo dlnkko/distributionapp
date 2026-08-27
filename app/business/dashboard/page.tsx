@@ -75,7 +75,7 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/business/subscribe?purpose=new"
-          className="inline-flex shrink-0 rounded-full bg-ember px-5 py-2.5 text-sm font-medium text-ink transition-[transform,background-color,box-shadow] duration-200 ease-out hover:scale-[1.045] hover:bg-ember-soft hover:shadow-[0_12px_32px_rgba(255,77,28,0.32)] active:scale-[0.96]"
+          className="btn btn-ember inline-flex shrink-0 px-5 py-2.5 text-sm"
         >
           Add new listing
         </Link>
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
                 </div>
                 <Link
                   href={`/business/subscribe?listing=${listing.id}`}
-                  className="inline-flex shrink-0 self-start rounded-full border border-line px-4 py-2 text-sm text-paper transition-colors hover:border-ember/70 hover:text-ember"
+                  className="btn btn-outline inline-flex shrink-0 self-start px-4 py-2 text-sm"
                 >
                   Add credits
                 </Link>

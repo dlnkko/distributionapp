@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ListingNavLink } from "@/components/listing-nav-link";
 import { createClient } from "@/lib/supabase/server";
 
 export async function SiteHeader() {
@@ -34,9 +35,7 @@ export async function SiteHeader() {
             Dashboard
           </Link>
         ) : (
-          <Link href="/business" className="transition-colors hover:text-paper">
-            Get listed
-          </Link>
+          <ListingNavLink />
         )}
         {user ? (
           <form action="/auth/signout" method="post">

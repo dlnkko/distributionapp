@@ -262,7 +262,7 @@ export function QuestionFlow({ painPoint }: Props) {
                   <button
                     type="submit"
                     disabled={!ready || phase === "out" || !canSubmitWrite}
-                    className="shrink-0 self-start rounded-full bg-ember px-4 py-1.5 text-sm font-medium text-ink transition-opacity disabled:opacity-35 sm:self-auto"
+                    className="btn btn-ember shrink-0 self-start px-4 py-1.5 text-sm sm:self-auto"
                   >
                     Continue
                   </button>

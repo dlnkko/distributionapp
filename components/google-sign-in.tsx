@@ -38,7 +38,7 @@ export function GoogleSignIn({ nextPath, intent = "search" }: Props) {
         type="button"
         onClick={() => void signIn()}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-full bg-paper px-6 py-3 text-sm font-medium text-ink transition-[transform,background-color,box-shadow] duration-200 ease-out hover:scale-[1.03] hover:bg-white hover:shadow-[0_12px_32px_rgba(244,234,215,0.2)] active:scale-[0.97] active:shadow-none disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-paper disabled:hover:shadow-none"
+        className="btn btn-paper flex w-full gap-3 px-6 py-3 text-sm"
       >
         <GoogleMark />
         {loading ? "Redirecting..." : "Continue with Google"}

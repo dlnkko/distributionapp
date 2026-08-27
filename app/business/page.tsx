@@ -19,17 +19,33 @@ export default async function BusinessLandingPage() {
       <h1 className="font-display mt-6 max-w-3xl text-5xl leading-[1.05] sm:text-6xl">
         Show up when someone is already looking for you.
       </h1>
-      <p className="mt-6 max-w-2xl text-lg text-paper-dim">
+      <p className="font-display mt-8 max-w-2xl text-2xl leading-snug text-paper/90 sm:text-3xl">
         You only pay when someone whose exact needs match your business clicks
         through.
       </p>
-      <p className="mt-3 text-sm text-paper-dim">
-        From ${MIN_CREDIT_PURCHASE_USD}. ${CLICK_COST_USD.toFixed(2)} per click
-      </p>
-      <div className="mt-10">
+      <div className="mt-10 flex items-end gap-10">
+        <div>
+          <p className="font-display text-4xl tracking-tight text-paper">
+            ${MIN_CREDIT_PURCHASE_USD}
+          </p>
+          <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-paper-dim">
+            to start
+          </p>
+        </div>
+        <div className="mb-2 h-10 w-px bg-line" />
+        <div>
+          <p className="font-display text-4xl tracking-tight text-paper">
+            ${CLICK_COST_USD.toFixed(2)}
+          </p>
+          <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-paper-dim">
+            per click
+          </p>
+        </div>
+      </div>
+      <div className="mt-12">
         <Link
           href={continueHref}
-          className="inline-flex rounded-full bg-ember px-6 py-3 text-sm font-medium text-ink transition-[transform,background-color,box-shadow] duration-200 ease-out hover:scale-[1.045] hover:bg-ember-soft hover:shadow-[0_12px_32px_rgba(255,77,28,0.32)] active:scale-[0.96] active:bg-ember active:shadow-[0_4px_12px_rgba(255,77,28,0.2)]"
+          className="btn btn-ember shrink-0 px-6 py-3 text-sm"
         >
           {user
             ? continueHref === "/business/dashboard"

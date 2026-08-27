@@ -78,7 +78,7 @@ export function CreditsPurchase({
               setRaw(String(preset));
               setError("");
             }}
-            className={`rounded-full px-4 py-2 text-sm ${
+            className={`rounded-full px-4 py-2 text-sm transition-[transform,background-color,border-color] duration-200 ease-out hover:scale-[1.05] active:scale-[0.96] ${
               amount === preset
                 ? "bg-ember text-ink"
                 : "border border-line text-paper hover:border-paper/40"
@@ -109,7 +109,7 @@ export function CreditsPurchase({
       <button
         type="submit"
         disabled={loading || !valid}
-        className="rounded-full bg-ember px-8 py-3 text-sm font-medium text-ink transition-[transform,background-color,box-shadow] duration-200 ease-out hover:scale-[1.045] hover:bg-ember-soft hover:shadow-[0_12px_32px_rgba(255,77,28,0.32)] active:scale-[0.96] active:shadow-[0_4px_12px_rgba(255,77,28,0.2)] disabled:opacity-60 disabled:hover:scale-100 disabled:hover:bg-ember disabled:hover:shadow-none"
+        className="btn btn-ember px-8 py-3 text-sm"
       >
         {loading
           ? "Adding..."

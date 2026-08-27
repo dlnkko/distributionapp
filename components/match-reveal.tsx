@@ -27,6 +27,7 @@ export function MatchReveal() {
 
   const why = match.why?.filter(Boolean) ?? [];
   const host = hostFrom(match.websiteUrl);
+  const blurb = match.tagline || match.offerSummary;
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 pb-24 pt-10">
@@ -54,9 +55,9 @@ export function MatchReveal() {
             <h1 className="font-display text-4xl leading-[0.95] tracking-tight sm:text-6xl">
               {match.name}
             </h1>
-            {match.tagline ? (
+            {blurb ? (
               <p className="mt-3 text-lg leading-7 text-paper-dim sm:text-xl">
-                {match.tagline}
+                {blurb}
               </p>
             ) : null}
             {host ? <p className="mt-2 text-sm text-paper-dim">{host}</p> : null}
@@ -74,7 +75,7 @@ export function MatchReveal() {
             <p className="text-xs uppercase tracking-[0.18em] text-paper-dim">
               Why it fits you
             </p>
-            <ol className="mt-5 space-y-4">
+            <ol className="mt-5 space-y-5">
               {why.map((line, index) => (
                 <li key={`${index}-${line.slice(0, 24)}`} className="flex gap-4">
                   <span className="font-display w-6 shrink-0 text-ember">
@@ -90,30 +91,6 @@ export function MatchReveal() {
             {match.reason}
           </p>
         )}
-
-        {match.offerSummary ? (
-          <div className="mt-10 rounded-2xl border border-line bg-ink/40 px-5 py-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-paper-dim">
-              What they do
-            </p>
-            <p className="mt-3 text-base leading-7 text-paper">
-              {match.offerSummary}
-            </p>
-          </div>
-        ) : null}
-
-        {match.tags?.length ? (
-          <div className="mt-8 flex flex-wrap gap-2">
-            {match.tags.slice(0, 8).map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-line px-3 py-1 text-xs text-paper-dim"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        ) : null}
 
         <div className="mt-10">
           <ListingCta

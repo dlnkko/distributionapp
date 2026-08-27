@@ -8,8 +8,7 @@ import {
   type PricingPlan,
 } from "@/lib/cta";
 
-const emberButton =
-  "inline-flex shrink-0 items-center justify-center rounded-full bg-ember px-8 py-3.5 text-base font-medium text-ink transition-[transform,background-color,box-shadow] duration-200 ease-out hover:scale-[1.045] hover:bg-ember-soft hover:shadow-[0_12px_32px_rgba(255,77,28,0.32)] active:scale-[0.96] active:shadow-[0_4px_12px_rgba(255,77,28,0.2)]";
+const emberButton = "btn btn-ember px-8 py-3.5 text-base";
 
 type Props = {
   type: CtaType | string;

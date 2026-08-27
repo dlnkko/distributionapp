@@ -125,7 +125,7 @@ export function PainSearch({ signedIn = false }: Props) {
         </div>
         <button
           type="submit"
-          className="shrink-0 rounded-full bg-ember px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-ember-soft"
+          className="btn btn-ember shrink-0 px-5 py-2 text-sm"
         >
           Find it
         </button>

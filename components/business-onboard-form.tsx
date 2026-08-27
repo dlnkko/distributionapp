@@ -61,6 +61,7 @@ export function BusinessOnboardForm({ initial }: Props) {
   });
   const [revealed, setRevealed] = useState(Boolean(initial?.name));
   const [understood, setUnderstood] = useState(false);
+  const [triedPublish, setTriedPublish] = useState(false);
   const [scraping, setScraping] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -98,6 +99,15 @@ export function BusinessOnboardForm({ initial }: Props) {
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    const gaps = publishGaps(draft, understood);
+    if (gaps.length) {
+      setTriedPublish(true);
+      document.getElementById(gaps[0].id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      return;
+    }
     setSaving(true);
     try {
       const response = await fetch("/api/business/save", {
@@ -175,12 +185,12 @@ export function BusinessOnboardForm({ initial }: Props) {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-12">
       <form onSubmit={scrape} className="space-y-4">
-        <label className="block">
+        <label id="field-url" className="block">
           <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-paper-dim">
             Website URL
           </span>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <div className="flex w-full items-end gap-3">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
+            <div className="flex min-w-0 flex-1 items-end gap-3">
               {draft.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -202,7 +212,7 @@ export function BusinessOnboardForm({ initial }: Props) {
             <button
               type="submit"
               disabled={scraping}
-              className="shrink-0 rounded-full bg-paper px-5 py-2 text-sm font-medium text-ink disabled:opacity-60"
+              className="btn btn-paper shrink-0 px-5 py-2.5 text-sm"
             >
               {scraping ? "Reading site..." : "Analyze your offer"}
             </button>
@@ -213,9 +223,11 @@ export function BusinessOnboardForm({ initial }: Props) {
       {revealed ? (
         <form onSubmit={save} className="reveal-up space-y-6">
           <Field
+            id="field-name"
             label="Name"
             value={draft.name}
             onChange={(value) => update("name", value)}
+            invalid={triedPublish && !draft.name.trim()}
           />
           <Field
             label="Tagline"
@@ -229,11 +241,13 @@ export function BusinessOnboardForm({ initial }: Props) {
             multiline
           />
           <Field
+            id="field-audience"
             label="Target audience"
             value={draft.targetAudience}
             onChange={(value) => update("targetAudience", value)}
             multiline
             placeholder="Who you sell to — role, company size, niche, geography. Be specific."
+            invalid={triedPublish && draft.targetAudience.trim().length < 8}
           />
           <p className="-mt-4 text-xs text-paper-dim">
             Required. If someone sits a little outside this but the job still fits you, we
@@ -294,12 +308,18 @@ export function BusinessOnboardForm({ initial }: Props) {
               />
             </div>
             {draft.ctaType !== "visit_site" ? (
-              <div className="mt-6">
+              <div id="field-cta-url" className="mt-6">
                 <Field
                   label="Where every button should go"
                   value={draft.ctaUrl}
                   onChange={(value) => update("ctaUrl", value)}
                   placeholder="https://yourproduct.com/#pricing"
+                  invalid={
+                    triedPublish &&
+                    draft.ctaType !== "visit_site" &&
+                    !draft.ctaUrl.trim() &&
+                    !draft.websiteUrl.trim()
+                  }
                 />
                 <p className="mt-2 text-xs text-paper-dim">
                   Use a full URL, a path like /pricing, or a section like #book.
@@ -307,7 +327,7 @@ export function BusinessOnboardForm({ initial }: Props) {
               </div>
             ) : null}
             {draft.ctaType === "pricing" ? (
-              <div className="mt-8 space-y-4">
+              <div id="field-plans" className="mt-8 space-y-4">
                 {draft.plans.map((plan, index) => (
                   <PlanEditor
                     key={index}
@@ -322,7 +342,7 @@ export function BusinessOnboardForm({ initial }: Props) {
                   <button
                     type="button"
                     onClick={addPlan}
-                    className="text-sm text-paper underline decoration-paper/30 underline-offset-4"
+                    className="text-sm text-paper underline decoration-paper/30 underline-offset-4 transition-colors hover:text-ember hover:decoration-ember/50"
                   >
                     Add another plan
                   </button>
@@ -341,11 +361,31 @@ export function BusinessOnboardForm({ initial }: Props) {
           </div>
 
           {error ? <p className="text-sm text-ember">{error}</p> : null}
+          {triedPublish && publishGaps(draft, understood).length > 0 ? (
+            <div className="rounded-2xl border border-ember/50 bg-ember/5 px-5 py-4">
+              <p className="text-sm text-ember">Fill these before you publish:</p>
+              <ul className="mt-3 space-y-2 text-sm text-paper">
+                {publishGaps(draft, understood).map((gap) => (
+                  <li key={gap.id}>
+                    <a
+                      href={`#${gap.id}`}
+                      className="underline decoration-ember/40 underline-offset-4 hover:text-ember"
+                    >
+                      {gap.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <p className="max-w-md text-sm text-paper-dim">
             You cannot edit this listing after you publish. Make sure every field is
             right.
           </p>
-          <label className="flex max-w-md cursor-pointer items-start gap-3 text-sm text-paper">
+          <label
+            id="field-lock"
+            className="flex max-w-md cursor-pointer items-start gap-3 text-sm text-paper"
+          >
             <input
               type="checkbox"
               checked={understood}
@@ -356,13 +396,8 @@ export function BusinessOnboardForm({ initial }: Props) {
           </label>
           <button
             type="submit"
-            disabled={
-              saving ||
-              !understood ||
-              !draft.name.trim() ||
-              draft.targetAudience.trim().length < 8
-            }
-            className="rounded-full bg-ember px-6 py-3 text-sm font-medium text-ink disabled:opacity-60"
+            disabled={saving}
+            className="btn btn-ember px-6 py-3 text-sm"
           >
             {saving ? "Saving..." : "Publish listing"}
           </button>
@@ -397,7 +432,7 @@ function PlanEditor({
           <button
             type="button"
             onClick={onRemove}
-            className="text-xs text-paper-dim hover:text-ember"
+            className="text-xs text-paper-dim transition-colors hover:text-ember"
           >
             Remove
           </button>
@@ -506,7 +541,7 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3 py-1.5 text-sm ${
+      className={`rounded-full px-3 py-1.5 text-sm transition-[transform,background-color,border-color] duration-200 ease-out hover:scale-[1.05] active:scale-[0.96] ${
         selected
           ? "bg-ember text-ink"
           : "border border-line text-paper hover:border-paper/40"
@@ -532,7 +567,7 @@ function CtaChoice({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl border px-4 py-4 text-left transition-colors ${
+      className={`rounded-2xl border px-4 py-4 text-left transition-[transform,border-color,background-color] duration-200 ease-out hover:-translate-y-0.5 ${
         selected
           ? "border-ember bg-ink-soft"
           : "border-line bg-transparent hover:border-paper/30"
@@ -544,22 +579,72 @@ function CtaChoice({
   );
 }
 
+function publishGaps(draft: ListingDraft, understood: boolean) {
+  const gaps: { id: string; label: string }[] = [];
+  if (!draft.name.trim()) {
+    gaps.push({ id: "field-name", label: "Name" });
+  }
+  if (draft.targetAudience.trim().length < 8) {
+    gaps.push({
+      id: "field-audience",
+      label: "Target audience — who you sell to, in a full sentence",
+    });
+  }
+  if (draft.ctaType === "visit_site" && !draft.websiteUrl.trim()) {
+    gaps.push({ id: "field-url", label: "Website URL" });
+  }
+  if (
+    draft.ctaType !== "visit_site" &&
+    !draft.ctaUrl.trim() &&
+    !draft.websiteUrl.trim()
+  ) {
+    gaps.push({
+      id: "field-cta-url",
+      label: "Where every button should go",
+    });
+  }
+  if (
+    draft.ctaType === "pricing" &&
+    !draft.plans.some((plan) => plan.name.trim())
+  ) {
+    gaps.push({
+      id: "field-plans",
+      label: "At least one pricing plan name",
+    });
+  }
+  if (!understood) {
+    gaps.push({
+      id: "field-lock",
+      label: "Confirm the listing stays locked after you publish",
+    });
+  }
+  return gaps;
+}
+
 function Field({
+  id,
   label,
   value,
   onChange,
   multiline,
   placeholder,
+  invalid = false,
 }: {
+  id?: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
   multiline?: boolean;
   placeholder?: string;
+  invalid?: boolean;
 }) {
   return (
-    <label className="block">
-      <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-paper-dim">
+    <label id={id} className="block">
+      <span
+        className={`mb-2 block text-xs uppercase tracking-[0.18em] ${
+          invalid ? "text-ember" : "text-paper-dim"
+        }`}
+      >
         {label}
       </span>
       {multiline ? (
@@ -568,14 +653,18 @@ function Field({
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
           rows={4}
-          className="w-full resize-y border border-line bg-ink-soft/50 px-4 py-3 outline-none"
+          className={`w-full resize-y border bg-ink-soft/50 px-4 py-3 outline-none ${
+            invalid ? "border-ember/70" : "border-line"
+          }`}
         />
       ) : (
         <input
           value={value}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full border-b border-paper/25 bg-transparent py-3 outline-none"
+          className={`w-full border-b bg-transparent py-3 outline-none ${
+            invalid ? "border-ember/70" : "border-paper/25"
+          }`}
         />
       )}
     </label>

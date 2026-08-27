@@ -28,15 +28,18 @@ export default async function BusinessOnboardPage() {
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 pb-24 pt-8">
-      <h1 className="font-display text-5xl">
+      <p className="text-xs uppercase tracking-[0.22em] text-ember">Listing</p>
+      <h1 className="font-display mt-4 text-5xl">
         {addingAnother ? "Add another listing." : "Tell us what you sell."}
       </h1>
-      <p className="mt-4 mb-12 max-w-xl text-paper-dim">
-        Paste the URL. We scrape it, draft the listing, and you pick the call to
-        action people see when we recommend you. Credits you just bought stay on
-        this listing. After you publish, it stays as is.
-      </p>
-      <BusinessOnboardForm />
+      <div className="mt-8 max-w-lg space-y-3 border-l border-line pl-5 text-[15px] leading-7 text-paper-dim">
+        <p>Paste the URL. We scrape it and draft the listing.</p>
+        <p>You pick the call to action people see when we recommend you.</p>
+        <p>Credits stay on this listing. After you publish, it stays as is.</p>
+      </div>
+      <div className="mt-12">
+        <BusinessOnboardForm />
+      </div>
     </section>
   );
 }

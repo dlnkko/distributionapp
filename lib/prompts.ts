@@ -149,8 +149,12 @@ Lenses, in order:
 
 Never invent features. Do not name other brands in a reason.
 reason: 2 sentences, second person, about why this listing does the job they asked for.
-insight: one line that names the practical need, not a therapy read. No brand names.
-why: 3 short bullets, each one a concrete fit to an answer they gave.
+insight: one line that names the practical need they described. No brand names.
+why: exactly 3 bullets. Each one is personal, not a feature dump.
+- Start from a pain or answer they actually gave (echo their words).
+- Then say how THIS listing solves that specific thing.
+- Second person. Example: "You wanted to ship without hiring a developer — Replit lets you build and deploy from the same place."
+- Bad: "Includes software deployment" or "Lists nontechnical teams among its audience."
 
 JSON:
 {
@@ -192,5 +196,7 @@ export function rerankUser(input: {
     })),
     keep: input.keep,
     candidates: input.businesses,
+    instruction:
+      "The why bullets are the product. Each must answer one of their pains from the interview and how this listing solves it. Do not restate the listing's marketing tagline.",
   });
 }
