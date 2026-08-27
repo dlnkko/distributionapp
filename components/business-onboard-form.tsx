@@ -316,7 +316,6 @@ export function BusinessOnboardForm({ initial }: Props) {
                   placeholder="https://yourproduct.com/#pricing"
                   invalid={
                     triedPublish &&
-                    draft.ctaType !== "visit_site" &&
                     !draft.ctaUrl.trim() &&
                     !draft.websiteUrl.trim()
                   }
