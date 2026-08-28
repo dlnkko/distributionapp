@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ListingNavLink } from "@/components/listing-nav-link";
+import { LogoLink } from "@/components/logo-link";
 import { createClient } from "@/lib/supabase/server";
 
 export async function SiteHeader() {
@@ -21,11 +22,7 @@ export async function SiteHeader() {
 
   return (
     <header className="relative z-20 flex items-center justify-between px-6 py-5 md:px-10">
-      <Link href="/" className="font-display text-xl tracking-tight text-paper">
-        distribute
-        <span className="text-ember">.</span>
-        to
-      </Link>
+      <LogoLink />
       <nav className="flex items-center gap-6 text-base text-paper-dim md:gap-8 md:text-lg">
         {isBusiness ? (
           <Link
